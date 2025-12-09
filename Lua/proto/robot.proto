@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package ncmd_cs;
+
+// BtNodeId
+enum BtNodeId
+{
+    BT_ZERO         = 0;
+    //login
+    BT_LOGIN        = 1001;     //登陆
+    BT_LOGIN_UNIT   = 1002;     //登陆单元测试
+    BT_LOGOUT       = 1003;     //登出
+    BT_LOGIN_WAIT   = 1004;     //登陆
+}
+
+message child_message
+{
+    uint32 id                       = 1;        // id
+    string name                     = 2;        // name
+    map<string, string> values      = 3;
+}
+
+message num_message
+{
+    int32 i32                       = 1;
+    uint32 u32                      = 2;
+    int64 i64                       = 3;
+    uint64 u64                      = 4;
+    sint32 s32                      = 5;
+    sint64 s64                      = 6;
+    fixed32 f32                     = 7;
+    fixed64 f64                     = 8;
+    sfixed32 sf32                   = 9;
+    sfixed64 sf64                   = 10;
+    float d32                       = 11;
+    double d64                      = 12;
+}
+
+message test_message
+{
+    uint32 id                       = 1;        // id
+    child_message child             = 2;
+    repeated int32 custom2          = 3;
+    map<string, string> custom      = 4;
+    repeated child_message childs   = 5;
+    map<string, child_message> kvs  = 6;
+    oneof custom3 {
+        string str                  = 8;
+        int32 num                   = 9;
+    }
+}

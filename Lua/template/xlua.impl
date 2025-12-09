@@ -1,0 +1,16 @@
+--eufaula配置参数
+
+--服务器集群，对应后台的服务器id
+QUANTA_CLUSTER = 1
+
+--主机IP
+QUANTA_HOST_IP = "127.0.0.1"
+
+--企业微信地址
+QUANTA_WECHAT_URL = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxx"
+
+--链路追踪, 目前不能日志采集, 开放
+QUANTA_CHAIN_PB_URL = "http://127.0.0.1:9411/spans/"
+
+--LOKI, 使用日志采集, 一般不开放
+--QUANTA_LOKI_URL = "http://127.0.0.1:3100/loki/api/v1/push"

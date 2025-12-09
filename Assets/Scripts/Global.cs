@@ -6,6 +6,7 @@ public class Global : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        XluaManager.Start();
     }
 
     // Use this for initialization
@@ -15,9 +16,10 @@ public class Global : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        XluaManager.Lua.DoString("Update()");
+        XluaManager.Update();
     }
 
     void OnDestroy() {
+        XluaManager.ProcessLogQueue();
     }
 }
