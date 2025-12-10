@@ -59,7 +59,7 @@ function WindowMgr:create_gui(name, parent)
 end
 
 function WindowMgr:open_gui(name)
-    local gui = self:create_window(name)
+    local gui = self:create_gui(name)
     if gui then
         gui:open()
         return gui
