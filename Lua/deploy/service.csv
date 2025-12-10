@@ -1,0 +1,5 @@
+﻿服务表,服务id,服务名字,emun,是否启用
+Server,int,string,string,bool
+Client,,,,
+VariableName,id,name,enum_key,enable
+Start,32,xlua,XLUA,1

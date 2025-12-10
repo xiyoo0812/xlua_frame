@@ -1,10 +1,11 @@
---Window.lua
-local type      = type
-local pairs     = pairs
-local print     = print
-local tinsert   = table.insert
+--window.lua
+local type          = type
+local log_err       = logger.err
+local sformat       = string.format
 
-Window = class()
+local window_mgr    = quanta.get("window_mgr")
+
+local Window = class()
 local prop = property(Window)
 prop:accessor("widget", nil)
 prop:accessor("parent", nil)
@@ -13,17 +14,10 @@ prop:accessor("name", "")
 function Window:__init(parent, name)
     self.name = name
     self.parent = parent
-    self.callbacks = {}
-end
-
-function Window:destory()
-    for _, click in pairs(self.callbacks) do
-        click:Clear()
-    end
 end
 
 --是否打开
-function Window:isOpened()
+function Window:is_opened()
     if self.widget and self.widget.parent then
         return true
     end
@@ -31,10 +25,9 @@ function Window:isOpened()
 end
 
 --打开窗口
-function Window:openGUI(win_name, colse_self)
-    local ui = Fairy_Create_GUI(win_name)
+function Window:open_gui(win_name, colse_self)
+    local ui = window_mgr:open_gui(win_name)
     if ui then
-        ui:open()
         if colse_self then
             self:close()
         end
@@ -42,25 +35,16 @@ function Window:openGUI(win_name, colse_self)
     end
 end
 
-
-function Window:addCallback(callback)
-    tinsert(self.callbacks, callback)
-end
-
 --加载UI配置文件
-function Window:loadLayout(layout, package)
+function Window:load_layout(layout, package)
     if self.parent and layout then
-        UIPackage.AddPackage("FairyGUI/" .. package)
-        self.widget = UIPackage.CreateObject(package, layout)
+        self.widget = window_mgr:load_layout(package, layout)
         if self.widget then
-            if type(self.initEvent) == "function" then
-                self:initEvent()
+            if type(self.init_event) == "function" then
+                self:init_event()
             end
-            self:createResponse("btn_close", function()
-                self:close()
-            end, "frame")
         else
-            print(string.format("loadLayout Failed! layout = %s", layout))
+            log_err("[Window][loadLayout] load {} failed!", layout)
         end
         return self.widget
     end
@@ -68,92 +52,80 @@ end
 
 --tostring
 function Window:tostring()
-    return string.format("Window: {name=%s}", self.name)
+    return sformat("Window: {name=%s}", self.name)
 end
 
 --打开窗口
 function Window:open()
     if self.parent and self.widget then
-        if not self:isOpened() then
-            if type(self.initComponent) == "function" then
-                self:initComponent()
+        if not self:is_opened() then
+            if type(self.init_component) == "function" then
+                self:init_component()
             end
             self.parent:AddChild(self.widget)
         end
-    else
-        print("Window:open() Failed! ", self.parent, self.widget)
     end
 end
 
 --关闭窗口
 function Window:close()
     if self.parent and self.widget then
-        if self:isOpened() then
-            if type(self.onClose) == "function" then
-                self:onClose()
+        if self:is_opened() then
+            if type(self.on_close) == "function" then
+                self:on_close()
             end
             self.parent:RemoveChild(self.widget)
         end
-    else
-        print("Window:close() Failed! ", self.parent, self.widget)
     end
 end
 
 --注册响应事件
-function Window:createResponse(child_name, response, widgetName)
-    local child = self:getChild(child_name, widgetName)
+function Window:register_click(child_name, response, widget_name)
+    local child = self:get_child(child_name, widget_name)
     if child then
-        local function callback(context)
-            response(context)
-        end
-        child.onClick:Add(callback)
-        tinsert(self.callbacks, child.onClick)
+        child.onClick:Add(response)
     end
 end
 
 --注册响应事件
-function Window:createWidgetResponse(widget, response, child_name)
+function Window:register_widget_click(widget, response, child_name)
     local child
     if child_name then
         child = widget:GetChild(child_name)
     end
     child = child or widget
-    local function callback(context)
-        response(context)
-    end
-    child.onClick:Add(callback)
-    tinsert(self.callbacks, child.onClick)
+    child.onClick:Add(response)
 end
 
 --获取子窗口
-function Window:getChild(childName, widgetName)
+function Window:get_child(child_name, widget_name)
     if self.widget then
-        if widgetName then
-            local widget = self.widget:GetChild(widgetName)
+        if widget_name then
+            local widget = self.widget:GetChild(widget_name)
             if widget then
-                return widget:GetChild(childName)
+                return widget:GetChild(child_name)
             end
         end
-        return self.widget:GetChild(childName)
+        return self.widget:GetChild(child_name)
     end
 end
 
 --获取控制器
-function Window:getController(ctrlName, widgetName)
+function Window:get_controller(ctrl_name, widget_name)
     if self.widget then
-        if widgetName then
-            local widget = self.widget:GetChild(widgetName)
+        if widget_name then
+            local widget = self.widget:GetChild(widget_name)
             if widget then
-                return widget:GetController(ctrlName)
+                return widget:GetController(ctrl_name)
             end
         end
-        return self.widget:GetController(ctrlName)
+        return self.widget:GetController(ctrl_name)
     end
 end
 
 --获取控制器状态
-function Window:getControllerStatus(ctrlName, widgetName)
-    local controller = self:getController(ctrlName, widgetName)
+function Window:get_controller_status(ctrl_name, widget_name)
+    local controller = self:get_controller(ctrl_name, widget_name)
     if controller then
         return controller:GetSelectedIndex()
     end
@@ -161,102 +133,104 @@ function Window:getControllerStatus(ctrlName, widgetName)
 end
 
 --设置控制器状态
-function Window:setControllerStatus(ctrlName, status, widgetName)
-    local controller = self:getController(ctrlName, widgetName)
+function Window:set_controller_status(ctrl_name, status, widget_name)
+    local controller = self:get_controller(ctrl_name, widget_name)
     if controller then
         controller:SetSelectedIndex(status)
     end
 end
 
 --设置控制器状态
-function Window:setWidgetControllerStatus(widget, ctrlName, status)
-    local controller = widget:GetController(ctrlName)
+function Window:set_widget_controller_status(widget, ctrl_name, status)
+    local controller = widget:GetController(ctrl_name)
     if controller then
         controller:SetSelectedIndex(status)
     end
 end
 
 --获取trans
-function Window:getTransition(transName, widgetName)
+function Window:get_transition(trans_name, widget_name)
     if self.widget then
-        if widgetName then
-            local widget = self.widget:GetChild(widgetName)
+        if widget_name then
+            local widget = self.widget:GetChild(widget_name)
             if widget then
-                return widget:GetTransition(transName)
+                return widget:GetTransition(trans_name)
             end
         end
-        return self.widget:GetTransition(transName)
+        return self.widget:GetTransition(trans_name)
     end
 end
 
 --play trans
-function Window:playTransition(transName, widgetName)
-    local trans = self:getTransition(transName, widgetName)
+function Window:play_transition(trans_name, widget_name)
+    local trans = self:get_transition(trans_name, widget_name)
     if trans then
         trans:Play()
     end
 end
 
 --显示子窗口
-function Window:showChild(childName, visible)
-    local child = self:getChild(childName)
+function Window:show_child(child_name, visible)
+    local child = self:get_child(child_name)
     if child then
         child.visible = visible
     end
 end
 
 --设置子窗口text
-function Window:setChildText(childName, txt, widgetName)
-    local child = self:getChild(childName, widgetName)
+function Window:set_child_text(child_name, txt, widget_name)
+    local child = self:get_child(child_name, widget_name)
     if child then
         child.text = txt
     end
 end
 
 --子窗口text
-function Window:getChildText(childName, widgetName)
-    local child = self:getChild(childName, widgetName)
+function Window:get_child_text(child_name, widget_name)
+    local child = self:get_child(child_name, widget_name)
     if child then	
         return child.text
     end
 end
 
 --设置子窗口url
-function Window:setChildUrl(childName, url, widgetName)
-    local child = self:getChild(childName, widgetName)
+function Window:set_child_url(child_name, url, widget_name)
+    local child = self:get_child(child_name, widget_name)
     if child then
         child.url = url
     end
 end
 
 --子窗口url
-function Window:getChildUrl(childName, widgetName)
-    local child = self:getChild(childName, widgetName)
+function Window:get_child_url(child_name, widget_name)
+    local child = self:get_child(child_name, widget_name)
     if child then
         return child.url
     end
 end
 
 --孙窗口text
-function Window:getWidgetText(widget, childName)
-    local child = widget:GetChild(childName)
+function Window:get_widget_text(widget, child_name)
+    local child = widget:GetChild(child_name)
     if child then
         return child.text
     end
 end
 
 --孙窗口text
-function Window:setWidgetText(widget, childName, text)
-    local child = widget:GetChild(childName)
+function Window:set_widget_text(widget, child_name, text)
+    local child = widget:GetChild(child_name)
     if child then
         child.text = text
     end
 end
 
 --孙窗口text
-function Window:setWidgetUrl(widget, childName, url)
-    local child = widget:GetChild(childName)
+function Window:set_widget_url(widget, child_name, url)
+    local child = widget:GetChild(child_name)
     if child then
         child.url = url
     end
 end
+
+return Window

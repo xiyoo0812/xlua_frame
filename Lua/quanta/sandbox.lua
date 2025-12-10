@@ -32,9 +32,7 @@ log.display()
 local load_files    = {}
 local load_codes    = {}
 local search_path   = {}
-    print("==============", package.path)
-for i, path in ipairs(ssplit(package.path, ";")) do
-    print(i, path)
+for _, path in ipairs(ssplit(package.path, ";")) do
     local spath = path:sub(1, path:find("?") - 1)
     search_path[#search_path + 1] = sgsub(spath, "\\", "/")
 end

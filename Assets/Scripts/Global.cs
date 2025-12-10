@@ -20,6 +20,6 @@ public class Global : MonoBehaviour {
     }
 
     void OnDestroy() {
-        XluaManager.ProcessLogQueue();
+        XluaManager.OnDestroy();
     }
 }

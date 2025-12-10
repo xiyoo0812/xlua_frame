@@ -16,21 +16,35 @@ public static class XluaManager {
 
     const string LUADLL = "xlua";
     private static LuaEnv s_Luaenv;
+    private static IntPtr s_Quanta = IntPtr.Zero;
     private static readonly object s_QueueLock = new object();
     private static readonly Queue<LogEntry> s_LogQueue = new Queue<LogEntry>();
 
     [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern string init_quanta(IntPtr L, string conf);
-    [MonoPInvokeCallback(typeof(XLua.LuaDLL.lua_CSFunction))]
-    public static string InitQuanta(IntPtr L, string conf) {
+    public static extern IntPtr init_quanta(IntPtr L, string conf);
+    public static IntPtr InitQuanta(IntPtr L, string conf) {
         return init_quanta(L, conf);
     }
 
     [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern bool run_quanta(IntPtr L);
-    [MonoPInvokeCallback(typeof(XLua.LuaDLL.lua_CSFunction))]
-    public static bool RunQuanta(IntPtr L) {
-        return run_quanta(L);
+    public static extern void stop_quanta(IntPtr quanta);
+    public static void StopQuanta(IntPtr quanta){
+        stop_quanta(quanta);
+    }
+
+    [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
+    public static extern bool run_quanta(IntPtr quanta);
+    public static bool RunQuanta(IntPtr quanat) {
+        return run_quanta(quanat);
+    }
+
+    [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
+    public static extern IntPtr last_error();
+    public static string GetLastError() {
+        IntPtr errorPtr = last_error();
+        string err = Marshal.PtrToStringAnsi(errorPtr);
+        if (err == null) err = Marshal.PtrToStringUTF8(errorPtr);
+        return err;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -38,38 +52,55 @@ public static class XluaManager {
 
     [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
     public static extern int lualog_set_logger(UnityConsoleOutputDelegate fn);
-    [MonoPInvokeCallback(typeof(XLua.LuaDLL.lua_CSFunction))]
     public static void SetLuaLogger(UnityConsoleOutputDelegate fn) {
         lualog_set_logger(fn);
+    }
+
+    public static string GetString(IntPtr sptr) {
+        string message = Marshal.PtrToStringAnsi(sptr);
+        if (message == null) {
+            message = Marshal.PtrToStringUTF8(sptr);
+        }
+        return message;
     }
 
     public static void Start() {
         s_Luaenv = new LuaEnv();
         SetLuaLogger(UnityConsoleOutput);
-        string res = InitQuanta(s_Luaenv.L, "Lua/xlua.conf");
-        Debug.LogFormat($"InitQuanta: {res}");
+        IntPtr quanta = InitQuanta(s_Luaenv.L, "Lua/xlua.conf");
+        if (quanta == IntPtr.Zero) {
+            string err = GetLastError();
+            Debug.LogError($"InitQuanta Error: {err}");
+        } else {
+            s_Quanta = quanta;
+            Debug.Log("InitQuanta Success!");
+        }
     }
 
     public static void Update() {
-    //    RunQuanta(s_Luaenv.L);
+        if (s_Quanta != IntPtr.Zero) {
+            RunQuanta(s_Quanta);
+        }
+        ProcessLogQueue();
+    }
+
+    public static void OnDestroy() {
+        if (s_Quanta != IntPtr.Zero) {
+            ProcessLogQueue();
+            StopQuanta(s_Quanta);
+            s_Quanta = IntPtr.Zero;
+        }
     }
 
     [MonoPInvokeCallback(typeof(UnityConsoleOutputDelegate))]
     public static void UnityConsoleOutput(IntPtr msgPtr, UIntPtr msglen, UIntPtr level) {
-        try {
-            int len = (int)msglen.ToUInt32();
-            string message = Marshal.PtrToStringAnsi(msgPtr, len);
-            if (message == null) {
-                byte[] buffer = new byte[len];
-                Marshal.Copy(msgPtr, buffer, 0, len);
-                message = Encoding.UTF8.GetString(buffer);
-            }
-            if (message == null) throw new Exception();
+        int len = (int)msglen.ToUInt32();
+        string message = Marshal.PtrToStringAnsi(msgPtr, len);
+        if (message == null) message = Marshal.PtrToStringUTF8(msgPtr, len);
+        if (message != null) {
             lock (s_QueueLock) {
                 s_LogQueue.Enqueue(new LogEntry { message = message, level = level.ToUInt32() });
             }
-        } catch (Exception e) {
-            Debug.LogError($"[UnityLogBridge] Error processing log message: {e.Message}");
         }
     }
 
@@ -84,9 +115,9 @@ public static class XluaManager {
         if (logsToProcess != null) {
             foreach (var log in logsToProcess) {
                 switch (log.level) {
-                    case 4: Debug.LogError(log.message); break;
-                    case 2: Debug.LogWarning(log.message); break;
-                    case 5: Debug.LogException(new Exception(log.message)); break;
+                    case 5: Debug.LogError(log.message); break;
+                    case 3: Debug.LogWarning(log.message); break;
+                    case 6: Debug.LogException(new Exception(log.message)); break;
                     default: Debug.Log(log.message); break;
                 }
             }
