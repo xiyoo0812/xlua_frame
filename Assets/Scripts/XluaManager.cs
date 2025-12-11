@@ -16,6 +16,7 @@ public static class XluaManager {
 
     const string LUADLL = "xlua";
     private static LuaEnv s_Luaenv;
+    private static string s_RootArg;
     private static IntPtr s_Quanta = IntPtr.Zero;
     private static readonly object s_QueueLock = new object();
     private static readonly Queue<LogEntry> s_LogQueue = new Queue<LogEntry>();
@@ -56,16 +57,15 @@ public static class XluaManager {
         lualog_set_logger(fn);
     }
 
-    public static string GetString(IntPtr sptr) {
-        string message = Marshal.PtrToStringAnsi(sptr);
-        if (message == null) {
-            message = Marshal.PtrToStringUTF8(sptr);
-        }
-        return message;
+    public static void Init(string args) {
+        s_RootArg = args;
     }
-
+    
     public static void Start() {
         s_Luaenv = new LuaEnv();
+        if (s_RootArg != null) {
+            s_Luaenv.Global.Set("ROOT_ARGS", s_RootArg);
+        }
         SetLuaLogger(UnityConsoleOutput);
         IntPtr quanta = InitQuanta(s_Luaenv.L, "Lua/xlua.conf");
         if (quanta == IntPtr.Zero) {

@@ -308,4 +308,11 @@ public static class ExampleConfig
         return false;
     };
 #endif
+
+    [CSharpCallLua]
+    public static List<Type> CSharpCallLua = new List<Type>()
+    {
+        typeof(FairyGUI.ListItemRenderer),
+        typeof(string[])
+    };
 }

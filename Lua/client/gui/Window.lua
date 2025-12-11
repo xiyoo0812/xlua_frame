@@ -36,7 +36,7 @@ function Window:open_gui(win_name, colse_self)
 end
 
 --加载UI配置文件
-function Window:load_layout(layout, package)
+function Window:load_layout(package, layout)
     if self.parent and layout then
         self.widget = window_mgr:load_layout(package, layout)
         if self.widget then

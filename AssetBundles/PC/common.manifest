@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+CRC: 2340883131
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: a60604cada323396cfdd77c5fc277831
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: deaf5b7fe83e1a31de382f7fed810e72
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: a60604cada323396cfdd77c5fc277831
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 49
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Resources/FairyGUI/common_atlas0.png
+- Assets/Resources/FairyGUI/common_fui.bytes
+Dependencies: []

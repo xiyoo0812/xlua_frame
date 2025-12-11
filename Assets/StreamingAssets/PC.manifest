@@ -1,0 +1,10 @@
+ManifestFileVersion: 0
+CRC: 2770873116
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: common
+      Dependencies: {}
+    Info_1:
+      Name: main_ui
+      Dependencies: {}

@@ -2,6 +2,7 @@
 
 local log_err   = logger.err
 local sformat   = string.format
+local ABMgr     = CS.ABMgr
 local GRoot     = CS.FairyGUI.GRoot
 local UIPackage = CS.FairyGUI.UIPackage
 
@@ -27,7 +28,12 @@ function WindowMgr:add_package(name)
     if self.packages[name] then
         return
     end
-    local pkg = UIPackage.AddPackage(sformat("FairyGUI/%s", name))
+    local ab = ABMgr.LoadAB(name)
+    if not ab then
+        log_err("[WindowMgr][add_package] load ab: {} failed!", name)
+        return
+    end
+    local pkg = UIPackage.AddPackage(ab)
     if not pkg then
         log_err("[WindowMgr][add_package] add package: {} failed!", name)
         return
