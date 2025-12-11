@@ -1,12 +1,10 @@
 //XluaManager.cs
 
 using System;
-using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using XLua;
-using System.Text;
 
 public static class XluaManager {
     private struct LogEntry {

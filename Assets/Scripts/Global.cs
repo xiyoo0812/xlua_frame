@@ -1,9 +1,6 @@
 //Global.cs
 
-using FairyGUI;
 using UnityEngine;
-using System.IO;
-using System.Reflection;
 
 public class Global : MonoBehaviour {
     // Use this for initialization
