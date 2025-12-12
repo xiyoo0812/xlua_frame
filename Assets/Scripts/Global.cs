@@ -5,10 +5,6 @@ using UnityEngine;
 public class Global : MonoBehaviour {
     // Use this for initialization
     void Start () {
-        string[] args = System.Environment.GetCommandLineArgs();
-        if (args.Length >= 2) {
-            XluaManager.Init(args[1]);
-        }
         XluaManager.Start();
     }
 

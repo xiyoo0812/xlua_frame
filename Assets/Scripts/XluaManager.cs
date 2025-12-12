@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using XLua;
+using FairyGUI;
 
 public static class XluaManager {
     private struct LogEntry {
@@ -20,9 +21,9 @@ public static class XluaManager {
     private static readonly Queue<LogEntry> s_LogQueue = new Queue<LogEntry>();
 
     [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
-    public static extern IntPtr init_quanta(IntPtr L, string conf);
-    public static IntPtr InitQuanta(IntPtr L, string conf) {
-        return init_quanta(L, conf);
+    public static extern IntPtr init_quanta(IntPtr L, int argc, string[] argv);
+    public static IntPtr InitQuanta(IntPtr L, int argc, string[] argv) {
+        return init_quanta(L, argc, argv);
     }
 
     [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
@@ -61,11 +62,14 @@ public static class XluaManager {
     
     public static void Start() {
         s_Luaenv = new LuaEnv();
-        if (s_RootArg != null) {
-            s_Luaenv.Global.Set("ROOT_ARGS", s_RootArg);
-        }
         SetLuaLogger(UnityConsoleOutput);
-        IntPtr quanta = InitQuanta(s_Luaenv.L, "Lua/xlua.conf");
+        string[] cmdline = System.Environment.GetCommandLineArgs();
+        string[] argv = { cmdline[0], "Lua/xlua.conf", "", "" };
+        if (cmdline.Length > 1) argv[2] = "--ROOT_ARGV=" + cmdline[1];
+#if UNITY_EDITOR
+        argv[2] = "--UNITY_DRITOR=1";
+#endif
+        IntPtr quanta = InitQuanta(s_Luaenv.L, argv.Length, argv);
         if (quanta == IntPtr.Zero) {
             string err = GetLastError();
             Debug.LogError($"InitQuanta Error: {err}");
