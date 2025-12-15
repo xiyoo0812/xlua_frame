@@ -56,10 +56,6 @@ public static class XluaManager {
         lualog_set_logger(fn);
     }
 
-    public static void Init(string args) {
-        s_RootArg = args;
-    }
-    
     public static void Start() {
         s_Luaenv = new LuaEnv();
         SetLuaLogger(UnityConsoleOutput);
