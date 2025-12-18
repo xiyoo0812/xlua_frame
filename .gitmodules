@@ -1,0 +1,3 @@
+[submodule "Game/quanta"]
+	path = Game/quanta
+	url = https://gitee.com/xiyoo0812/quanta.git

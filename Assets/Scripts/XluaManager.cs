@@ -60,7 +60,7 @@ public static class XluaManager {
         s_Luaenv = new LuaEnv();
         SetLuaLogger(UnityConsoleOutput);
         string[] cmdline = System.Environment.GetCommandLineArgs();
-        string[] argv = { cmdline[0], "Lua/xlua.conf", "", "" };
+        string[] argv = { cmdline[0], "Game/cbin/xlua.conf", "", "" };
         if (cmdline.Length > 1) argv[2] = "--ROOT_ARGV=" + cmdline[1];
 #if UNITY_EDITOR
         argv[2] = "--UNITY_DRITOR=1";
