@@ -44,7 +44,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.assetbundlebrowser": {
-      "version": "https://github.com/Unity-Technologies/AssetBundles-Browser.git",
+      "version": "https://gitcode.com/gh_mirrors/as/AssetBundles-Browser.git",
       "depth": 0,
       "source": "git",
       "dependencies": {},
